@@ -34,7 +34,8 @@ app.post('/enroll', function(request, response){
     console.log(request.body);
     if (response.statusCode === 200 || response.statusCode === 201){
         console.log("Successful:", response.statusCode);
-       /* request.body.email = request.body.email.trim();
+       /* do server side cleaning here -- validation here 
+       request.body.email = request.body.email.trim();
         request.body.firstName = request.body.firstName.trim();
         request.body.lastName = request.body.lastName.trim();*/
         connection.query(`INSERT INTO ${tableName} SET ?`, request.body, function(error, results, fields){
@@ -45,7 +46,8 @@ app.post('/enroll', function(request, response){
                 response.send({"database_success": results});
             }
         });
-       /* response.status(200).send({"message": "Data received",
+       /* CANNOT HAVE TWO SERVER RESPONSES -- here for reference
+       response.status(200).send({"message": "Data received",
                                         "data": request.body});*/
     }
     else {

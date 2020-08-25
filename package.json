@@ -15,6 +15,7 @@
     "express": "^4.17.1",
     "mongoose": "^5.9.16",
     "mysql": "^2.18.1",
+    "nodemailer": "^6.4.11",
     "validatorjs": "^3.19.1"
   }
 }

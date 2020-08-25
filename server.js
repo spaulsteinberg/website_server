@@ -42,7 +42,7 @@ app.get('/', function(request, response){
 });
 
 //send post from '/enroll', creating an endpoint
-app.post('/enroll', function(request, response){
+app.post('/setcontact', function(request, response){
     console.log(request.body);
     let validation = new Validator(request.body, rules);
     let passed = validation.passes() ? "Yes" : "No";

@@ -32,19 +32,19 @@ const tableName = connectParams.fields.TABLE_NAME;
 
 //validation rules, check against request.body
 const rules = {
-    firstName: 'required|min:3|max:20',
-    lastName: 'required|min:2|max:30',
-    email: 'required|email|max:320',
-    phone: 'required',
-    description: 'max:100'
-}
+    firstName: connectParams.valid.FIRST_NAME,
+    lastName: connectParams.valid.LAST_NAME,
+    email: connectParams.valid.EMAIL,
+    phone: connectParams.valid.PHONE,
+    description: connectParams.valid.DESCRIPTION
+};
 
 //send get from root ('/'), callback functon has access to the request and the response
 app.get('/', function(request, response){
     response.send("Im online");
 });
 
-//send post from '/enroll', creating an endpoint
+//send post from '/setcontact', creating an endpoint
 app.post('/setcontact', function(request, response){
     console.log(request.body);
     let validation = new Validator(request.body, rules);

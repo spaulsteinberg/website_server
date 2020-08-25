@@ -63,7 +63,7 @@ app.post('/setcontact', function(request, response){
             }
             else {
                 response.send({"database_success": `Your feedback has been received, ${request.body.firstName}!`});
-                sendAlertEmail(request.body);
+                sendAlertEmail(request.body); //send email on success
             }
         });
     }
@@ -76,6 +76,8 @@ app.post('/setcontact', function(request, response){
 app.listen(PORT, function(){
     console.log("Listening on port...", PORT);
 });
+
+//configure transport. using gmail registered through their api
 var transport = nodemailer.createTransport({
     host: connectParams.email.HOST,
     service: connectParams.email.SERVICE,
@@ -88,14 +90,19 @@ var transport = nodemailer.createTransport({
         accessToken: connectParams.email.AUTH.ACCESS_TOKEN
     }
 });
+
+//mailParams determines message sender/receriver and content
 var mailParams = {
     from: connectParams.email.OPTIONS.FROM,
     to: connectParams.email.OPTIONS.TO,
 }
+//mess with the current date
 function getFormattedDate(){
     let oldDate = new Date();
     return `${oldDate.toString()}`;
 }
+
+//log email output
 const logFileName = '../logs/logfile.txt';
 function writeLogger(res, curDate){
     res = `${curDate} --- ${res}\n`;
@@ -104,6 +111,7 @@ function writeLogger(res, curDate){
         console.log('Saved to log.');
       });   
 }
+//send an email alert
 function sendAlertEmail(content){
     curDate = getFormattedDate();
     mailParams.subject = `WEBSITE FEEDBACK FROM ${curDate}`;

@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mysql = require('mysql');
+const Validator = require('validatorjs');
 
 //choose a port to run server
 const PORT = 3000;
@@ -16,39 +17,50 @@ app.use(bodyParser.json());
 //have express use the cors package
 app.use(cors());
 
+//should hit the apache server on xampp. Port 80
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     database: 'website_contact',
     password: ''
 });
-const tableName = "contact_request"
+const tableName = "contact_request";
+
+//validation rules, check against request.body
+const rules = {
+    firstName: 'required|min:3|max:20',
+    lastName: 'required|min:2|max:30',
+    email: 'required|email|max:320',
+    phone: 'required',
+    description: 'max:100'
+}
 
 //send get from root ('/'), callback functon has access to the request and the response
 app.get('/', function(request, response){
-    response.send("hello from server");
+    response.send("Im online");
 });
 
 //send post from '/enroll', creating an endpoint
 app.post('/enroll', function(request, response){
     console.log(request.body);
+    let validation = new Validator(request.body, rules);
+    let passed = validation.passes() ? "Yes" : "No";
+    console.log(`Passed? --> ${passed}`);
     if (response.statusCode === 200 || response.statusCode === 201){
         console.log("Successful:", response.statusCode);
-       /* do server side cleaning here -- validation here 
-       request.body.email = request.body.email.trim();
+       /* strip leading and trailing chars */
+        request.body.email = request.body.email.trim();
         request.body.firstName = request.body.firstName.trim();
-        request.body.lastName = request.body.lastName.trim();*/
+        request.body.lastName = request.body.lastName.trim();
+        // using ? will escape the characters
         connection.query(`INSERT INTO ${tableName} SET ?`, request.body, function(error, results, fields){
             if (error){
                 throw error;
             }
             else {
-                response.send({"database_success": results});
+                response.send({"database_success": "Your feedback has been received!"});
             }
         });
-       /* CANNOT HAVE TWO SERVER RESPONSES -- here for reference
-       response.status(200).send({"message": "Data received",
-                                        "data": request.body});*/
     }
     else {
         console.log("Failed with code:", response.statusCode);

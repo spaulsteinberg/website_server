@@ -98,7 +98,7 @@ function getFormattedDate(){
 }
 const logFileName = '../logs/logfile.txt';
 function writeLogger(res, curDate){
-    res = `${curDate} --- ${res}`;
+    res = `${curDate} --- ${res}\n`;
     fs.appendFile(path.resolve(__dirname, logFileName), res, function (err) {
         if (err) throw err;
         console.log('Saved to log.');

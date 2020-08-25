@@ -6,6 +6,8 @@ const mysql = require('mysql');
 const Validator = require('validatorjs');
 const connectParams = require('../important');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 
 //choose a port to run server
 const PORT = 3000;
@@ -92,20 +94,28 @@ var mailParams = {
 }
 function getFormattedDate(){
     let oldDate = new Date();
-    return `${oldDate.toString()}`
+    return `${oldDate.toString()}`;
+}
+const logFileName = '../logs/logfile.txt';
+function writeLogger(res, curDate){
+    res = `${curDate} --- ${res}`;
+    fs.appendFile(path.resolve(__dirname, logFileName), res, function (err) {
+        if (err) throw err;
+        console.log('Saved to log.');
+      });   
 }
 function sendAlertEmail(content){
-    mailParams.subject = `WEBSITE FEEDBACK FROM ${getFormattedDate()}`;
+    curDate = getFormattedDate();
+    mailParams.subject = `WEBSITE FEEDBACK FROM ${curDate}`;
     mailParams.html = `<p>First Name: ${content.firstName}</p>
                        <p>Last Name: ${content.lastName}</p>
                        <p>Email: ${content.email}</p>
                        <p>Phone: ${content.phone}</p>
                        <p>Description: ${content.description}</p>`;
     transport.sendMail(mailParams, function(error, info){
-        if (error) console.log(error);
-        else console.log(info.response, Date.now());
-        //should probably write this to a log
-    })
+        console.log(error ? error : info.response);
+        writeLogger(error ? error : info.response, curDate);
+    });
 }
 
 /* RUN ON NODE WITH: $ node server */

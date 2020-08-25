@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const mysql = require('mysql');
 const Validator = require('validatorjs');
+const connectParams = require('./important');
 
 //choose a port to run server
 const PORT = 3000;
@@ -19,12 +20,12 @@ app.use(cors());
 
 //should hit the apache server on xampp. Port 80
 const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    database: 'website_contact',
-    password: ''
+    host: connectParams.fields.HOST,
+    user: connectParams.fields.USER,
+    database: connectParams.fields.DATABASE_NAME,
+    password: connectParams.fields.PASSWORD
 });
-const tableName = "contact_request";
+const tableName = connectParams.fields.TABLE_NAME;
 
 //validation rules, check against request.body
 const rules = {

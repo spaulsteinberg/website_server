@@ -59,7 +59,7 @@ app.post('/enroll', function(request, response){
                 throw error;
             }
             else {
-                response.send({"database_success": "Your feedback has been received!"});
+                response.send({"database_success": `Your feedback has been received, ${request.body.firstName}!`});
             }
         });
     }

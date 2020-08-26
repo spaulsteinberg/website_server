@@ -16,6 +16,7 @@
     "mongoose": "^5.9.16",
     "mysql": "^2.18.1",
     "nodemailer": "^6.4.11",
+    "twilio": "^3.49.0",
     "validatorjs": "^3.19.1"
   }
 }

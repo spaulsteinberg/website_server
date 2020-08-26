@@ -8,6 +8,7 @@ const connectParams = require('../important');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const client = require('twilio')(connectParams.twilio.ACCOUNT_SID, connectParams.twilio.AUTH_TOKEN);
 
 //choose a port to run server
 const PORT = 3000;
@@ -64,6 +65,7 @@ app.post('/setcontact', function(request, response){
             else {
                 response.send({"database_success": `Your feedback has been received, ${request.body.firstName}!`});
                 sendAlertEmail(request.body); //send email on success
+                sendSMSAlert();
             }
         });
     }
@@ -124,6 +126,15 @@ function sendAlertEmail(content){
         console.log(error ? error : info.response);
         writeLogger(error ? error : info.response, curDate);
     });
+}
+
+function sendSMSAlert(){
+    client.messages.create({
+     body: `New Feedback from site made at ${getFormattedDate()}. Check Email for details.`,
+     from: connectParams.twilio.FROM_NUMBER,
+     to: connectParams.twilio.TO_NUMBER
+   })
+  .then(message => console.log(message.sid));
 }
 
 /* RUN ON NODE WITH: $ node server */

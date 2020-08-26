@@ -63,9 +63,9 @@ app.post('/setcontact', function(request, response){
                 throw error;
             }
             else {
-                response.send({"database_success": `Your feedback has been received, ${request.body.firstName}!`});
+                response.send({"database_success": `Your feedback has been submitted, ${request.body.firstName}! Click to close.`});
                 sendAlertEmail(request.body); //send email on success
-                sendSMSAlert();
+                sendSMSAlert(); //sms on success
             }
         });
     }
@@ -128,6 +128,7 @@ function sendAlertEmail(content){
     });
 }
 
+//send an SMS alert
 function sendSMSAlert(){
     client.messages.create({
      body: `New Feedback from site made at ${getFormattedDate()}. Check Email for details.`,

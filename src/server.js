@@ -9,6 +9,7 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
 const client = require('twilio')(connectParams.twilio.ACCOUNT_SID, connectParams.twilio.AUTH_TOKEN);
+const { google } = require('googleapis');
 
 //choose a port to run server
 const PORT = 3000;
@@ -66,6 +67,7 @@ app.post('/setcontact', function(request, response){
                 response.send({"database_success": `Your feedback has been submitted, ${request.body.firstName}! Click to close.`});
                 sendAlertEmail(request.body); //send email on success
                 sendSMSAlert(); //sms on success
+                getData();
             }
         });
     }
@@ -79,22 +81,24 @@ app.listen(PORT, function(){
     console.log("Listening on port...", PORT);
 });
 
+let googleOAuth = {
+    type: 'OAuth2',
+    user: connectParams.email.AUTH.USER,
+    clientId: connectParams.email.AUTH.CLIENT_ID,
+    clientSecret: connectParams.email.AUTH.SECRET_ID,
+    refreshToken: connectParams.email.AUTH.REFRESH_TOKEN,
+    accessToken: connectParams.email.AUTH.ACCESS_TOKEN
+}
+
 //configure transport. using gmail registered through their api
-var transport = nodemailer.createTransport({
+let transport = nodemailer.createTransport({
     host: connectParams.email.HOST,
     service: connectParams.email.SERVICE,
-    auth: {
-        type: 'OAuth2',
-        user: connectParams.email.AUTH.USER,
-        clientId: connectParams.email.AUTH.CLIENT_ID,
-        clientSecret: connectParams.email.AUTH.SECRET_ID,
-        refreshToken: connectParams.email.AUTH.REFRESH_TOKEN,
-        accessToken: connectParams.email.AUTH.ACCESS_TOKEN
-    }
+    auth: googleOAuth
 });
 
 //mailParams determines message sender/receriver and content
-var mailParams = {
+let mailParams = {
     from: connectParams.email.OPTIONS.FROM,
     to: connectParams.email.OPTIONS.TO,
 }
@@ -114,7 +118,7 @@ function writeLogger(res, curDate){
       });   
 }
 //send an email alert
-function sendAlertEmail(content){
+async function sendAlertEmail(content){
     curDate = getFormattedDate();
     mailParams.subject = `WEBSITE FEEDBACK FROM ${curDate}`;
     mailParams.html = `<p>First Name: ${content.firstName}</p>
@@ -129,7 +133,7 @@ function sendAlertEmail(content){
 }
 
 //send an SMS alert
-function sendSMSAlert(){
+async function sendSMSAlert(){
     client.messages.create({
      body: `New Feedback from site made at ${getFormattedDate()}. Check Email for details.`,
      from: connectParams.twilio.FROM_NUMBER,
@@ -138,4 +142,19 @@ function sendSMSAlert(){
   .then(message => console.log(message.sid));
 }
 
-/* RUN ON NODE WITH: $ node server */
+
+const jwt = new google.auth.JWT(connectParams.analytics.SERVICE_ACCOUNT.client_email, null, connectParams.analytics.SERVICE_ACCOUNT.private_key, connectParams.analytics.SCOPE);
+const view_id = '227697203';
+
+async function getData() {
+    const response = await jwt.authorize()
+    const result = await google.analytics('v3').data.ga.get({
+      'auth': jwt,
+      'ids': 'ga:' + connectParams.analytics.VIEW_ID,
+      'start-date': '30daysAgo',
+      'end-date': 'today',
+      'metrics': 'ga:pageviews'
+    })
+  
+    console.dir(result)
+  }

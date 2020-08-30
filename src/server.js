@@ -10,6 +10,11 @@ const fs = require('fs');
 const path = require('path');
 const client = require('twilio')(connectParams.twilio.ACCOUNT_SID, connectParams.twilio.AUTH_TOKEN);
 const { google } = require('googleapis');
+const { request } = require('express');
+
+//create new JWT auth instance
+const jwt = new google.auth.JWT(connectParams.analytics.SERVICE_ACCOUNT.client_email, null, connectParams.analytics.SERVICE_ACCOUNT.private_key, connectParams.analytics.SCOPE);
+
 
 //choose a port to run server
 const PORT = 3000;
@@ -43,8 +48,13 @@ const rules = {
 
 //send get from root ('/'), callback functon has access to the request and the response
 app.get('/', function(request, response){
-    response.send("Im online");
+    response.send("Im the server. Online and running...");
+    jwtConnect();
 });
+
+async function jwtConnect(){
+    const res = await jwt.authorize();
+}
 
 //send post from '/setcontact', creating an endpoint
 app.post('/setcontact', function(request, response){
@@ -67,7 +77,6 @@ app.post('/setcontact', function(request, response){
                 response.send({"database_success": `Your feedback has been submitted, ${request.body.firstName}! Click to close.`});
                 sendAlertEmail(request.body); //send email on success
                 sendSMSAlert(); //sms on success
-                getData();
             }
         });
     }
@@ -143,18 +152,69 @@ async function sendSMSAlert(){
 }
 
 
-const jwt = new google.auth.JWT(connectParams.analytics.SERVICE_ACCOUNT.client_email, null, connectParams.analytics.SERVICE_ACCOUNT.private_key, connectParams.analytics.SCOPE);
-const view_id = '227697203';
+app.get('/websitePageViews30days', async (request, response) => {
+    try {
+        const result = await google.analytics('v3').data.ga.get({
+        'auth': jwt,
+        'ids': 'ga:' + connectParams.analytics.VIEW_ID,
+        'start-date': '30daysAgo',
+        'end-date': 'today',
+        'metrics': 'ga:pageviews, ga:timeOnPage, ga:avgTimeOnPage'
+        });
+        response.send({
+            "status": 200,
+            "data": result,
+            "pageviews": result.data.rows[0][0],
+            "timeOnPage": result.data.rows[0][1],
+            "avgTimeOnPage": result.data.rows[0][2]
+        });
+    } catch (error){
+        console.log(error);
+        response.send({
+            "status": error, 
+            "errorMessage": "Error occurred getting pageview data."
+        });
+    }
+})
 
-async function getData() {
-    const response = await jwt.authorize()
-    const result = await google.analytics('v3').data.ga.get({
-      'auth': jwt,
-      'ids': 'ga:' + connectParams.analytics.VIEW_ID,
-      'start-date': '30daysAgo',
-      'end-date': 'today',
-      'metrics': 'ga:pageviews'
-    })
-  
-    console.dir(result)
-  }
+app.get('/websiteEventData30days', async (request, response) => {
+    try {
+        const result = await google.analytics('v3').data.ga.get({
+        'auth': jwt,
+        'ids': 'ga:' + connectParams.analytics.VIEW_ID,
+        'start-date': '30daysAgo',
+        'end-date': 'today',
+        'dimensions': 'ga:eventLabel',
+        'metrics': 'ga:totalEvents, ga:sessionsWithEvent, ga:uniqueEvents'
+        });
+        response.send({
+            "status": 200,
+            "data": result,
+            "totalEvents": result.data.rows[0][1],
+            "sessionsWithEvent": result.data.rows[0][2],
+            "uniqueEvents": result.data.rows[0][3]
+        });
+    } catch (error){
+        console.log(error);
+        response.send({
+            "status": error, 
+            "errorMessage": "Error occurred getting event data."
+        });
+    }
+})
+
+app.get('/feedback/count', function(request, response){
+    connection.query(`SELECT COUNT(*) FROM ${tableName}`, function(error, results, fields){
+        if (error){
+            response.send({"status": "Bad Query"});
+            throw error;
+        }
+        else {
+            console.log(results, fields);
+            response.send({
+                "status": "OK",
+                "count": results[0]['COUNT(*)']
+            });
+        }
+    });
+})

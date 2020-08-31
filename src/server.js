@@ -151,7 +151,7 @@ async function sendSMSAlert(){
   .then(message => console.log(message.sid));
 }
 
-
+//request for last 30 days of pageviews
 app.get('/websitePageViews30days', async (request, response) => {
     try {
         const result = await google.analytics('v3').data.ga.get({
@@ -177,6 +177,7 @@ app.get('/websitePageViews30days', async (request, response) => {
     }
 })
 
+// last 30 days of event data
 app.get('/websiteEventData30days', async (request, response) => {
     try {
         const result = await google.analytics('v3').data.ga.get({
@@ -184,15 +185,12 @@ app.get('/websiteEventData30days', async (request, response) => {
         'ids': 'ga:' + connectParams.analytics.VIEW_ID,
         'start-date': '30daysAgo',
         'end-date': 'today',
-        'dimensions': 'ga:eventLabel',
-        'metrics': 'ga:totalEvents, ga:sessionsWithEvent, ga:uniqueEvents'
+        'dimensions': 'ga:eventAction',
+        'metrics': 'ga:totalEvents, ga:uniqueEvents'
         });
         response.send({
             "status": 200,
-            "data": result,
-            "totalEvents": result.data.rows[0][1],
-            "sessionsWithEvent": result.data.rows[0][2],
-            "uniqueEvents": result.data.rows[0][3]
+            "payload": result.data.rows
         });
     } catch (error){
         console.log(error);
@@ -203,6 +201,7 @@ app.get('/websiteEventData30days', async (request, response) => {
     }
 })
 
+// feedback count from db
 app.get('/feedback/count', function(request, response){
     connection.query(`SELECT COUNT(*) FROM ${tableName}`, function(error, results, fields){
         if (error){
@@ -217,4 +216,24 @@ app.get('/feedback/count', function(request, response){
             });
         }
     });
+})
+
+app.get('/pagevisits', async (request, response) => {
+    try {
+        const result = await google.analytics('v3').data.ga.get({
+            'auth': jwt,
+            'ids': 'ga:' + connectParams.analytics.VIEW_ID,
+            'start-date': '30daysAgo',
+            'end-date': 'today',
+            'dimensions': 'ga:pagePath, ga:pageTitle',
+            'metrics': 'ga:pageviews'
+            });
+        response.send({
+            "status": "OK",
+            "data": result.data.rows
+        });
+    }catch(e){
+        console.log(e);
+        response.send({"status": response});
+    }
 })

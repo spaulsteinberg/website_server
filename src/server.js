@@ -218,6 +218,7 @@ app.get('/feedback/count', function(request, response){
     });
 })
 
+//path paths, times, etc
 app.get('/pagevisits', async (request, response) => {
     try {
         const result = await google.analytics('v3').data.ga.get({
@@ -226,7 +227,49 @@ app.get('/pagevisits', async (request, response) => {
             'start-date': '30daysAgo',
             'end-date': 'today',
             'dimensions': 'ga:pagePath, ga:pageTitle',
-            'metrics': 'ga:pageviews'
+            'metrics': 'ga:pageviews, ga:avgTimeOnPage'
+            });
+        response.send({
+            "status": "OK",
+            "data": result.data.rows
+        });
+    }catch(e){
+        console.log(e);
+        response.send({"status": response});
+    }
+})
+
+//get locations and page speeds
+app.get('/speed', async (request, response) => {
+    try {
+        const result = await google.analytics('v3').data.ga.get({
+            'auth': jwt,
+            'ids': 'ga:' + connectParams.analytics.VIEW_ID,
+            'start-date': '30daysAgo',
+            'end-date': 'today',
+            'dimensions': 'ga:continent, ga:country, ga:city, ga:region',
+            'metrics': 'ga:pageLoadTime, ga:redirectionTime, ga:avgServerResponseTime'
+            });
+        response.send({
+            "status": "OK",
+            "data": result.data.rows
+        });
+    }catch(e){
+        console.log(e);
+        response.send({"status": response});
+    }
+})
+
+//get pageviews by date
+app.get('/pageViewsOnTime', async (request, response) => {
+    try {
+        const result = await google.analytics('v3').data.ga.get({
+            'auth': jwt,
+            'ids': 'ga:' + connectParams.analytics.VIEW_ID,
+            'start-date': '30daysAgo',
+            'end-date': 'today',
+            'dimensions': 'ga:date',
+            'metrics': 'ga:pageviews, ga:uniquePageviews, ga:totalEvents, ga:uniqueEvents, ga:hits, ga:sessionDuration, ga:avgSessionDuration, ga:eventsPerSessionWithEvent'
             });
         response.send({
             "status": "OK",

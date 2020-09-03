@@ -209,7 +209,6 @@ app.get('/feedback/count', function(request, response){
             throw error;
         }
         else {
-            console.log(results, fields);
             response.send({
                 "status": "OK",
                 "count": results[0]['COUNT(*)']
@@ -260,13 +259,54 @@ app.get('/speed', async (request, response) => {
     }
 })
 
-//get pageviews by date
+//get pageviews by date -- 30 days
 app.get('/pageViewsOnTime', async (request, response) => {
     try {
         const result = await google.analytics('v3').data.ga.get({
             'auth': jwt,
             'ids': 'ga:' + connectParams.analytics.VIEW_ID,
             'start-date': '30daysAgo',
+            'end-date': 'today',
+            'dimensions': 'ga:date',
+            'metrics': 'ga:pageviews, ga:uniquePageviews, ga:totalEvents, ga:uniqueEvents, ga:hits, ga:sessionDuration, ga:avgSessionDuration, ga:eventsPerSessionWithEvent'
+            });
+        response.send({
+            "status": "OK",
+            "data": result.data.rows
+        });
+    }catch(e){
+        console.log(e);
+        response.send({"status": response});
+    }
+})
+
+// get stuff for 1 week
+app.get('/pageViewsOnTimeOneWeek', async (request, response) => {
+    try {
+        const result = await google.analytics('v3').data.ga.get({
+            'auth': jwt,
+            'ids': 'ga:' + connectParams.analytics.VIEW_ID,
+            'start-date': '7daysAgo',
+            'end-date': 'today',
+            'dimensions': 'ga:date',
+            'metrics': 'ga:pageviews, ga:uniquePageviews, ga:totalEvents, ga:uniqueEvents, ga:hits, ga:sessionDuration, ga:avgSessionDuration, ga:eventsPerSessionWithEvent'
+            });
+        response.send({
+            "status": "OK",
+            "data": result.data.rows
+        });
+    }catch(e){
+        console.log(e);
+        response.send({"status": response});
+    }
+})
+
+app.get('/pageViewsOnTimeTwoWeeks', async (request, response) => {
+    try {
+        const result = await google.analytics('v3').data.ga.get({
+            'auth': jwt,
+            'ids': 'ga:' + connectParams.analytics.VIEW_ID,
+            'start-date': '14daysAgo',
             'end-date': 'today',
             'dimensions': 'ga:date',
             'metrics': 'ga:pageviews, ga:uniquePageviews, ga:totalEvents, ga:uniqueEvents, ga:hits, ga:sessionDuration, ga:avgSessionDuration, ga:eventsPerSessionWithEvent'

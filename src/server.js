@@ -246,7 +246,7 @@ app.get('/speed', async (request, response) => {
             'ids': 'ga:' + connectParams.analytics.VIEW_ID,
             'start-date': '30daysAgo',
             'end-date': 'today',
-            'dimensions': 'ga:continent, ga:country, ga:city, ga:region',
+            'dimensions': 'ga:continent, ga:country, ga:city, ga:region, ga:latitude, ga:longitude',
             'metrics': 'ga:pageLoadTime, ga:redirectionTime, ga:avgServerResponseTime'
             });
         response.send({
